@@ -1,0 +1,6 @@
+*.pyc
+Notebooks/.ipynb_checkpoints/*
+data/*
+*.pkl
+*.h5
+__pycache__/*
