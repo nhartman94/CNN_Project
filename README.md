@@ -1,4 +1,4 @@
-# Conv Nets for energy estimation on jet images (or something like that)
+# Classifying Electromagnetic Showers from Calorimeter Images with CNNs
 
 ## Dataset
 
