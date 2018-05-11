@@ -21,7 +21,7 @@ Authors:
     Nicole Hartman and Sean Mullane, Stanford University Department of Physics
 
 Most esteemed mentor: 
-    Michael Kagan, SLAC, CERN-ATLAS 
+    Michael Kagan, SLAC/CERN-ATLAS 
     
 ## Dataset
 
