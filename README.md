@@ -1,11 +1,5 @@
 # Classifying Electromagnetic Showers from Calorimeter Images with CNNs
 
-## Dataset
-
-We will be using the jet images of the showers in the EM calorimeter produced
-by Micky, et. al.
-https://data.mendeley.com/datasets/pvn3xc3wy5/1
-
 ## Algorithms
 
 Our initial steps are to flatten the three calorimeter images and concatenate into one long vector, and then feed this vector into a fully-connected network to attempt particle classification. 
@@ -15,20 +9,23 @@ After we experiment with the fully connected network, we'll preprocess each imag
 Alternatively, we could combine the three activation maps from the above CNNs into a single image (i.e. each activiation map represents a color channel). We could then use this image as input to another CNN, that has a finaly fully-connected layer. 
 
 We'll use the following baseline architecture for the CNNs: 
-    
-    
 
--> Recurrent convolutional neural networks
--> 3d convolutions
--> beta variational auto encoders
+    (1) 3 x ([Conv --> Batchnorm --> ReLU] x N) --> FC --> Softmax 
+    (2) 3 x ([Conv --> Batchnorm --> ReLU] x N) --> [Conv --> Batchnorm --> ReLU] x M --> FC --> Softmax
+    
+In the above, the "3 x" denotes three seperate CNN layers for each input image, after which the resulting activation maps are then (1) flattened together and used as input to the FC network, or (2) stacked into a 3-channel image and used as input to another CNN layer. N and M denote the number of layers in each CNN layer. 
 
-## Repo description
-(To fill in later)
+Future work will include processing images with a recurrent CNN and using 3D convolutions to process the input images.  
 
 Authors: 
-    Sean Mullane 
-    Nicole Hartman
+    Nicole Hartman and Sean Mullane, Stanford University Department of Physics
 
 Most esteemed mentor: 
-    Michael Kagan
+    Michael Kagan, SLAC, CERN-ATLAS 
+    
+## Dataset
+
+We will be using the jet images of the showers in the EM calorimeter produced
+by Micky, et. al.
+https://data.mendeley.com/datasets/pvn3xc3wy5/1
 
