@@ -5,9 +5,7 @@ import numpy as np
 import h5py
 
 import torch
-#import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
-#from torchvision import transforms, utils
 from torch.utils.data.sampler import SubsetRandomSampler
 
 # There are some global variables that these functions use
@@ -64,9 +62,9 @@ class emShowersDatasetFlat(Dataset):
         layer2 = np.vstack((d_gamma['layer_2'][:], d_piplus['layer_2'][:], d_eplus['layer_2'][:]))
         
         # Test to make sure that all of the datasets are the same length
-        self.layer0 = torch.from_numpy(layer0 - layer0_mean)
-        self.layer1 = torch.from_numpy(layer1 - layer1_mean)
-        self.layer2 = torch.from_numpy(layer2 - layer2_mean)
+        self.layer0 = torch.from_numpy(layer0 - layer0_mean).type(torch.FloatTensor) 
+        self.layer1 = torch.from_numpy(layer1 - layer1_mean).type(torch.FloatTensor)
+        self.layer2 = torch.from_numpy(layer2 - layer2_mean).type(torch.FloatTensor)
         
         # Get the y labels
         self.y = torch.from_numpy(np.concatenate((np.zeros(N), np.ones(N), 2*np.ones(N))))
@@ -98,11 +96,11 @@ def getDataLoaders(batch_size=64):
     for i in range(nClasses):
         
         idxTrain += [j for j in range(i*N, int((i+trainFrac)*N))]
-        idxVal += [j for j in range(int((i+trainFrac)*N) + int((i+trainFrac+valFrac)*N))]
+        idxVal += [j for j in range(int((i+trainFrac)*N), int((i+trainFrac+valFrac)*N))]
         idxTest += [j for j in range(int((i+trainFrac+valFrac)*N), (i+1)*N)]
     
-        loader_train = DataLoader(dset, batch_size=batch_size, sampler=SubsetRandomSampler(idxTrain))
-        loader_val = DataLoader(dset, batch_size=batch_size, sampler=SubsetRandomSampler(idxVal))
-        loader_test = DataLoader(dset, batch_size=batch_size, sampler=SubsetRandomSampler(idxTest))
+    loader_train = DataLoader(dset, batch_size=batch_size, sampler=SubsetRandomSampler(idxTrain))
+    loader_val = DataLoader(dset, batch_size=batch_size, sampler=SubsetRandomSampler(idxVal))
+    loader_test = DataLoader(dset, batch_size=batch_size, sampler=SubsetRandomSampler(idxTest))
 
     return loader_train, loader_val, loader_test

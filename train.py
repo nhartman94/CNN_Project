@@ -1,0 +1,117 @@
+'''
+Some useful functions for training the Pytorch networks stolen from
+the PyTorch nb in assignment 2 :-)
+'''
+import torch
+import torch.nn.functional as F
+
+# Some useful global variables to use across functions
+if torch.cuda.is_available():
+    device = torch.device('cuda')
+else:
+    device = torch.device('cpu')
+dtype = torch.float32
+
+def check_accuracy(loader, model, returnAcc=False):
+
+    '''
+    Check the accuracy of the model
+
+    Inputs:
+        loader: A DataLoader object, i.e, for the val or test st
+        model: A Pytorch model to check the accuracy on
+        returnAcc: If true, the function will return the calculated accuacy
+
+    '''
+    
+    num_correct = 0
+    num_samples = 0
+    model.eval()  # set model to evaluation mode
+    with torch.no_grad():
+        for l0, l1, l2, y in loader:
+            l0 = l0.to(device=device, dtype=dtype)  # move to device, e.g. GPU
+            l1 = l1.to(device=device, dtype=dtype)
+            l2 = l2.to(device=device, dtype=dtype)
+            y = y.to(device=device, dtype=torch.long)
+            scores = model(l0, l1, l2)
+            _, preds = scores.max(1)
+            num_correct += (preds == y).sum()
+            num_samples += preds.size(0)
+        acc = float(num_correct) / num_samples
+        print('Got %d / %d correct (%.2f)' % (num_correct, num_samples, 100 * acc))
+
+        if returnAcc:
+            return acc
+
+def check_loss(loader, model):
+    '''
+    Calculate the loss
+    '''
+    with torch.no_grad():
+        for l0, l1, l2, y in loader:
+            l0 = l0.to(device=device, dtype=dtype)  # move to device, e.g. GPU
+            l1 = l1.to(device=device, dtype=dtype)
+            l2 = l2.to(device=device, dtype=dtype)
+            y = y.to(device=device, dtype=torch.long)
+
+            # Calculate the loss
+            scores = model(l0, l1, l2)
+            loss = F.cross_entropy(scores, y) 
+
+def train(loader_train, loader_val, model, optimizer, epochs=1):
+    """
+    Train a model on CIFAR-10 using the PyTorch Module API.
+    
+    Inputs:
+    - model: A PyTorch Module giving the model to train.
+    - optimizer: An Optimizer object we will use to train the model
+    - epochs: (Optional) A Python integer giving the number of epochs to train for
+
+    Returns: Nothing, but prints model accuracies during training.
+    """
+    print_every=100
+
+    model = model.to(device=device)  # move the model parameters to CPU/GPU
+
+    hist = {}
+    hist['loss'] = []
+    hist['acc'] = []
+    #hist['val_loss'] = []
+    hist['val_acc'] = []
+
+    for e in range(epochs):
+
+        for t, (l0, l1, l2, y) in enumerate(loader_train):
+            model.train()  # put model to training mode
+            l0 = l0.to(device=device, dtype=dtype)
+            l1 = l1.to(device=device, dtype=dtype)
+            l2 = l2.to(device=device, dtype=dtype)
+            y = y.to(device=device, dtype=torch.long)
+
+            scores = model(l0, l1, l2)
+            loss = F.cross_entropy(scores, y)
+            hist['loss'].append(loss.item)
+
+            # Zero out all of the gradients for the variables which the optimizer
+            # will update.
+            optimizer.zero_grad()
+
+            # This is the backwards pass: compute the gradient of the loss with
+            # respect to each  parameter of the model.
+            loss.backward()
+
+            # Actually update the parameters of the model using the gradients
+            # computed by the backwards pass.
+            optimizer.step()
+
+            if t % print_every == 0:
+                print('Iteration %d, loss = %.4f' % (t, loss.item()))
+                check_accuracy(loader_val, model)
+                print()
+
+        # Save the acc / epoch
+        hist['acc'] .append(check_accuracy(loader_train, model)) 
+        hist['val_acc'] .append(check_accuracy(loader_val, model)) 
+
+    return hist
+
