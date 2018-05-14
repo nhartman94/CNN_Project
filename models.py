@@ -5,8 +5,6 @@ Models for electromagnetic particle shower classification.
 	(3) 3 CNN --> CNN ---> FC network --> Softmax 
 See Git Repo (https://github.com/nhartman94/CNN_Project) for more information.
 """
-
-=======
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
