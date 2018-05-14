@@ -6,7 +6,6 @@ Models for electromagnetic particle shower classification.
 See Git Repo (https://github.com/nhartman94/CNN_Project) for more information.
 """
 
-<<<<<<< HEAD
 =======
 import torch
 import torch.nn.functional as F
@@ -226,5 +225,3 @@ class ThreeCNN(nn.module):
     )
 
     return fc_model
-
->>>>>>> 47a6203faab5abbf1460a57d3f6b2a5f18631436
