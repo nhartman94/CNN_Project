@@ -71,7 +71,7 @@ class FCNet(nn.Module):
         # To output classification
         scores = self.fc4(h3) 
 
-        return scores1900
+        return scores
 
 """
 Baseline CNN classifier architecture: 
@@ -101,7 +101,7 @@ class ThreeCNN(nn.Module):
 
     All other inputs follow the same pattern for the other calorimeter images, except for fc_params: 
 
-      fc_params = [input_dimension, h1_dim, d2_dim, h3_dim, p]
+      fc_params = [input_dimension, h1_dim, d2_dim, h3_dim, out_dimension, p]
 
     where input_dimension = 18*3 = 54 for this case, hi_dim is the number of dimensions in the ith hidden layer, and 
     p is the probability of keeping a given node during drouput. 
@@ -130,6 +130,9 @@ class ThreeCNN(nn.Module):
       self.layer1_params_all.append(layer1_params[i])
       self.layer2_params_all.append(layer2_params[i])
 
+
+    # IMPORTANT: duplicate values not appended to list. 
+    # need to fix this! 
     # load reduction layers 
     for j in range(4):
       self.layer0_params_all.append(layer0_reduce[j])
@@ -137,7 +140,7 @@ class ThreeCNN(nn.Module):
       self.layer2_params_all.append(layer2_reduce[j])
 
     # load fc layer 
-    for k in range(5):
+    for k in range(6):
       self.fc_all.append(fc_params[k])
 
   def forward_preprocess(self):
@@ -211,15 +214,16 @@ class ThreeCNN(nn.Module):
       nn.Linear(self.fc_all[0], self.fc_all[1]),
       nn.BatchNorm1d(self.fc_all[1]),
       nn.ReLU(),
-      nn.Dropout(self.fc_all[4]),
+      nn.Dropout(self.fc_all[5]),
       nn.Linear(self.fc_all[1], self.fc_all[2]),
       nn.BatchNorm1d(self.fc_all[2]),
       nn.ReLU(),
-      nn.Dropout(self.fc_all[4]),
+      nn.Dropout(self.fc_all[5]),
       nn.Linear(self.fc_all[2], self.fc_all[3]),
       nn.BatchNorm1d(self.fc_all[3]),
       nn.ReLU(),
-      nn.Dropout(self.fc_all[4])
+      nn.Dropout(self.fc_all[5]),
+      nn.Linear(self.fc_all[3], self.fc_all[4])
     )
 
     return fc_model
