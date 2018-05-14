@@ -86,7 +86,7 @@ For simplicity, the CNN layers of the initial model will follow this pattern:
   [N - 1 CNN layers that preserve the input volume] --> [1 reduce layer that takes input to 3 x 6] --> FC 
 
 """
-class ThreeCNN(nn.module): 
+class ThreeCNN(nn.Module): 
 
   def __init__(self, layer0_params, layer0_reduce, layer1_params, layer1_reduce, layer2_params, layer2_reduce, fc_params):
 
