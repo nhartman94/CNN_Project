@@ -125,7 +125,7 @@ class ThreeCNN(nn.Module):
     self.fc_all = []
 
     # load volume-preserving layers 
-    for i in range(4):
+    for i in range(5):
       self.layer0_params_all.append(layer0_params[i])
       self.layer1_params_all.append(layer1_params[i])
       self.layer2_params_all.append(layer2_params[i])
@@ -134,7 +134,7 @@ class ThreeCNN(nn.Module):
     # IMPORTANT: duplicate values not appended to list. 
     # need to fix this! 
     # load reduction layers 
-    for j in range(4):
+    for j in range(5):
       self.layer0_params_all.append(layer0_reduce[j])
       self.layer1_params_all.append(layer1_reduce[j])
       self.layer2_params_all.append(layer2_reduce[j])
