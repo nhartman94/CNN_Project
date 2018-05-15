@@ -20,7 +20,7 @@ nClasses = 3
 class emShowersDatasetFlat(Dataset):
     """EM showers dataset"""
     
-    def __init__(self, relPath='data', N=N, trainFrac=trainFrac, transform=None):
+    def __init__(self, relPath='data/', N=N, trainFrac=trainFrac, transform=None):
         """
         
         Instantiates a class which then returns examples as a tuple for the 
@@ -36,9 +36,9 @@ class emShowersDatasetFlat(Dataset):
         a lot more elegantly with Pytorch's transforms
         """
         
-        d_gamma  = h5py.File('../data/gamma.hdf5', 'r')
-        d_piplus = h5py.File('../data/piplus.hdf5', 'r')
-        d_eplus  = h5py.File('../data/eplus.hdf5', 'r')
+        d_gamma  = h5py.File(relPath+'gamma.hdf5', 'r')
+        d_piplus = h5py.File(relPath+'piplus.hdf5', 'r')
+        d_eplus  = h5py.File(relPath+'eplus.hdf5', 'r')
         
         # Subtract the mean image from the training set in each of the layers
         l0_gamma_mean = np.mean(d_gamma['layer_0'][:int(trainFrac*N)],axis=0)
