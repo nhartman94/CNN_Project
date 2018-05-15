@@ -61,11 +61,22 @@ class emShowersDatasetFlat(Dataset):
         layer1 = np.vstack((d_gamma['layer_1'][:], d_piplus['layer_1'][:], d_eplus['layer_1'][:]))
         layer2 = np.vstack((d_gamma['layer_2'][:], d_piplus['layer_2'][:], d_eplus['layer_2'][:]))
         
+        # Reshape the tensors as NxCxHxW, with C=1 in this case :)
+        N,H,W = layer0.shape
+        layer0 = layer0.reshape(N,1,H,W)
+
+        N,H,W = layer1.shape
+        layer1 = layer1.reshape(N,1,H,W)
+
+        N,H,W = layer2.shape
+        layer2 = layer2.reshape(N,1,H,W)
+
         # Test to make sure that all of the datasets are the same length
         self.layer0 = torch.from_numpy(layer0 - layer0_mean).type(torch.FloatTensor) 
         self.layer1 = torch.from_numpy(layer1 - layer1_mean).type(torch.FloatTensor)
         self.layer2 = torch.from_numpy(layer2 - layer2_mean).type(torch.FloatTensor)
-        
+
+  
         # Get the y labels
         self.y = torch.from_numpy(np.concatenate((np.zeros(N), np.ones(N), 2*np.ones(N))))
         
