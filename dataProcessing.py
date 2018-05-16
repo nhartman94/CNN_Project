@@ -20,7 +20,7 @@ nClasses = 3
 class emShowersDatasetFlat(Dataset):
     """EM showers dataset"""
     
-    def __init__(self, relPath='data/', N=N, trainFrac=trainFrac, transform=None):
+    def __init__(self, relPath='../data/', N=N, trainFrac=trainFrac, transform=None):
         """
         
         Instantiates a class which then returns examples as a tuple for the 
@@ -62,14 +62,14 @@ class emShowersDatasetFlat(Dataset):
         layer2 = np.vstack((d_gamma['layer_2'][:], d_piplus['layer_2'][:], d_eplus['layer_2'][:]))
         
         # Reshape the tensors as NxCxHxW, with C=1 in this case :)
-        N,H,W = layer0.shape
-        layer0 = layer0.reshape(N,1,H,W)
+        m0,h0,w0 = layer0.shape
+        layer0 = layer0.reshape(m0,1,h0,w0)
 
-        N,H,W = layer1.shape
-        layer1 = layer1.reshape(N,1,H,W)
+        m1,h1,w1 = layer1.shape
+        layer1 = layer1.reshape(m1,1,h1,w1)
 
-        N,H,W = layer2.shape
-        layer2 = layer2.reshape(N,1,H,W)
+        m2,h2,w2 = layer2.shape
+        layer2 = layer2.reshape(m2,1,h2,w2)
 
         # Test to make sure that all of the datasets are the same length
         self.layer0 = torch.from_numpy(layer0 - layer0_mean).type(torch.FloatTensor) 
@@ -109,6 +109,8 @@ def getDataLoaders(batch_size=64):
         idxTrain += [j for j in range(i*N, int((i+trainFrac)*N))]
         idxVal += [j for j in range(int((i+trainFrac)*N), int((i+trainFrac+valFrac)*N))]
         idxTest += [j for j in range(int((i+trainFrac+valFrac)*N), (i+1)*N)]
+    
+    print(max(self.y[idxVal]))
     
     loader_train = DataLoader(dset, batch_size=batch_size, sampler=SubsetRandomSampler(idxTrain))
     loader_val = DataLoader(dset, batch_size=batch_size, sampler=SubsetRandomSampler(idxVal))
