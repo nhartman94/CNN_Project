@@ -24,7 +24,7 @@ else:
 dtype = torch.float32
 
 
-def trainingMetrics(hist, modelName):
+def trainingMetrics(hist, modelName=''):
 
     '''
     Plot the training and val training metrics for a model. 
@@ -39,24 +39,25 @@ def trainingMetrics(hist, modelName):
     acc      = hist['acc']
     val_acc  = hist['val_acc']
 
-    iters = np.arange(1,loss.size+1)
-    epochs = np.arange(1,acc.size+1)
+    iters = range(1,len(loss)+1)
+    epochs = range(1,len(acc)+1)
 
-    plt.plot(epochs,loss,label='training')
+    plt.plot(iters,loss,label='training')
     #plt.plot(epochs,val_loss,label='validation')
     plt.xlabel('iterations',fontsize=14)
     plt.ylabel('cross-entropy loss',fontsize=14)
     plt.legend()
-    plt.savefig('../figures/loss_{}.jpg'.format(modelName))
+    if(len(modelName) > 0):
+        plt.savefig('../figures/loss_{}.jpg'.format(modelName))
 
     plt.figure()
     plt.plot(epochs,acc,label='training')
     plt.plot(epochs,val_acc,label='validation')
     plt.xlabel('epochs',fontsize=14)
     plt.ylabel('accuracy',fontsize=14)
-    plt.ylim(0.775,.85)
     plt.legend()
-    plt.savefig('../figures/acc_{}.jpg'.format(modelName))
+    if(len(modelName) > 0):
+        plt.savefig('../figures/acc_{}.jpg'.format(modelName))
     plt.show()
 
 
@@ -131,6 +132,9 @@ def sigBkgEff(m, loader, signalNode):
     predictions = np.concatenate(tuple(predictions),axis=0) 
     y_test = np.concatenate(tuple(y_test),axis=0) 
 
+    print("Min / max of y_test")
+    print(np.min(y_test),np.max(y_test))
+    
     if signalNode == 0: 
         disc = np.log(np.divide(predictions[:,0], predictions[:,1] + predictions[:,2]))
         xlabel = '$D_\gamma = \ln [ p_\gamma / (p_\pi + p_e ) ]$'

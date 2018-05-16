@@ -90,7 +90,7 @@ def train(loader_train, loader_val, model, optimizer, epochs=1):
 
             scores = model(l0, l1, l2)
             loss = F.cross_entropy(scores, y)
-            hist['loss'].append(loss.item)
+            hist['loss'].append(loss.item())
 
             # Zero out all of the gradients for the variables which the optimizer
             # will update.
@@ -110,8 +110,8 @@ def train(loader_train, loader_val, model, optimizer, epochs=1):
                 print()
 
         # Save the acc / epoch
-        hist['acc'] .append(check_accuracy(loader_train, model)) 
-        hist['val_acc'] .append(check_accuracy(loader_val, model)) 
+        hist['acc'] .append(check_accuracy(loader_train, model, returnAcc=True)) 
+        hist['val_acc'] .append(check_accuracy(loader_val, model, returnAcc=True)) 
 
     return hist
 
