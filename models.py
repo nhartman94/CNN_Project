@@ -227,3 +227,151 @@ class ThreeCNN(nn.Module):
     )
 
     return fc_model
+
+class ThreeCNN_Module(nn.Module):
+    
+  def __init__(self, layer0_params, layer0_reduce, layer1_params, layer1_reduce, layer2_params, layer2_reduce, fc_params):
+
+    """
+    Identical to the class ThreeCNN above, but uses the module API for easier integration with already-written training 
+    code in train.py. 
+
+    Initializes a ThreeCNN object with the following inputs: 
+
+      layer0_params = [# filters, filter_height, filter_width, stride, padding] --> paramaters that define the 
+        volume-preserving layers of the CNN network for the 0th calorimeter image. 
+
+      layer0_reduce = [same parameter types as above] --> parameters defining the reducing CNN layer. Note that 
+        the parameters should be chosen so the output of this layer is of volume 3 x 6. 
+
+    All other inputs follow the same pattern for the other calorimeter images, except for fc_params: 
+
+      fc_params = [input_dimension, h1_dim, d2_dim, h3_dim, out_dimension, p]
+
+    where input_dimension = 18*3 = 54 for this case, hi_dim is the number of dimensions in the ith hidden layer, and 
+    p is the probability of keeping a given node during drouput. 
+
+    """
+
+    """
+    These arrays hold all of the parameters for the ThreeCNN object.
+
+      layer0_params_all[0] == # filters 
+      ...
+      layer0_params_all[5] == # filters in reducing CNN layer 
+      ...
+    """
+
+    super().__init__()
+
+    self.layer0_params_all = []
+    self.layer1_params_all = []
+    self.layer2_params_all = []
+    self.fc_all = [] 
+
+    # load volume-preserving layers 
+    for i in range(5):
+      self.layer0_params_all.append(layer0_params[i])
+      self.layer1_params_all.append(layer1_params[i])
+      self.layer2_params_all.append(layer2_params[i])
+
+    # load reduction layers 
+    for j in range(5):
+      self.layer0_params_all.append(layer0_reduce[j])
+      self.layer1_params_all.append(layer1_reduce[j])
+      self.layer2_params_all.append(layer2_reduce[j])
+
+    # load fc layer 
+    for k in range(6):
+      self.fc_all.append(fc_params[k])
+    
+     # CNN parameters 
+    # indexing: cnn_[calorimeter index]_[conv layer number]
+    self.cnn_0_1 = nn.Conv2d(1, self.layer0_params_all[0], (self.layer0_params_all[1], self.layer0_params_all[2]), stride=self.layer0_params_all[3], padding=self.layer0_params_all[4])
+    self.cnn_0_2 = nn.Conv2d(self.layer0_params_all[0], self.layer0_params_all[0], (self.layer0_params_all[1], self.layer0_params_all[2]), stride=self.layer0_params_all[3], padding=self.layer0_params_all[4])
+    self.cnn_0_3 = nn.Conv2d(self.layer0_params_all[0], self.layer0_params_all[0], (self.layer0_params_all[1], self.layer0_params_all[2]), stride=self.layer0_params_all[3], padding=self.layer0_params_all[4])
+    self.cnn_0_4 = nn.Conv2d(self.layer0_params_all[0], self.layer0_params_all[5], (self.layer0_params_all[6], self.layer0_params_all[7]), stride=self.layer0_params_all[8], padding=self.layer0_params_all[9])
+
+    self.cnn_1_1 = nn.Conv2d(1, self.layer1_params_all[0], (self.layer1_params_all[1], self.layer1_params_all[2]), stride=self.layer1_params_all[3], padding=self.layer1_params_all[4])
+    self.cnn_1_2 = nn.Conv2d(self.layer1_params_all[0], self.layer1_params_all[0], (self.layer1_params_all[1], self.layer1_params_all[2]), stride=self.layer1_params_all[3], padding=self.layer1_params_all[4])
+    self.cnn_1_3 = nn.Conv2d(self.layer1_params_all[0], self.layer1_params_all[0], (self.layer1_params_all[1], self.layer1_params_all[2]), stride=self.layer1_params_all[3], padding=self.layer1_params_all[4])
+    self.cnn_1_4 = nn.Conv2d(self.layer1_params_all[0], self.layer1_params_all[5], (self.layer1_params_all[6], self.layer1_params_all[7]), stride=self.layer1_params_all[8], padding=self.layer1_params_all[9])
+
+    self.cnn_2_1 = nn.Conv2d(1, self.layer2_params_all[0], (self.layer2_params_all[1], self.layer2_params_all[2]), stride=self.layer2_params_all[3], padding=self.layer2_params_all[4])
+    self.cnn_2_2 = nn.Conv2d(self.layer2_params_all[0], self.layer2_params_all[0], (self.layer2_params_all[1], self.layer2_params_all[2]), stride=self.layer2_params_all[3], padding=self.layer2_params_all[4])
+    self.cnn_2_3 = nn.Conv2d(self.layer2_params_all[0], self.layer2_params_all[0], (self.layer2_params_all[1], self.layer2_params_all[2]), stride=self.layer2_params_all[3], padding=self.layer2_params_all[4])
+    self.cnn_2_4 = nn.Conv2d(self.layer2_params_all[0], self.layer2_params_all[5], (self.layer2_params_all[6], self.layer2_params_all[7]), stride=self.layer2_params_all[8], padding=self.layer2_params_all[9])
+
+    # FC parameters 
+    self.lin_1 = nn.Linear(self.fc_all[0], self.fc_all[1])
+    self.lin_2 = nn.Linear(self.fc_all[1], self.fc_all[2])
+    self.lin_3 = nn.Linear(self.fc_all[2], self.fc_all[3])
+    self.lin_final = nn.Linear(self.fc_all[3], self.fc_all[4])
+
+  def forward(self, l0, l1, l2):
+
+    """
+    Forward pass for the network. Unlike in ThreeCNN, we use here the module API. 
+    """
+
+    # CNN forward pass for the 0th calorimeter layer image (input: l0)
+    cnn_0 = self.cnn_0_1(l0) 
+    cnn_0 = nn.BatchNorm2d(self.layer0_params_all[0])(cnn_0)
+    cnn_0 = nn.ReLU()(cnn_0)
+    cnn_0 = self.cnn_0_2(cnn_0) 
+    cnn_0 = nn.BatchNorm2d(self.layer0_params_all[0])(cnn_0)
+    cnn_0 = nn.ReLU()(cnn_0)
+    cnn_0 = self.cnn_0_3(cnn_0)
+    cnn_0 = nn.BatchNorm2d(self.layer0_params_all[0])(cnn_0)
+    cnn_0 = nn.ReLU()(cnn_0)
+    cnn_0 = self.cnn_0_4(cnn_0)
+    cnn_0 = nn.BatchNorm2d(self.layer0_params_all[5])(cnn_0)
+    cnn_0 = nn.ReLU()(cnn_0)
+
+    # CNN forward pass for the 1st calorimeter layer image (input: l1)
+    cnn_1 = self.cnn_1_1(l1) 
+    cnn_1 = nn.BatchNorm2d(self.layer0_params_all[0])(cnn_1)
+    cnn_1 = nn.ReLU()(cnn_1)
+    cnn_1 = self.cnn_1_2(cnn_1) 
+    cnn_1 = nn.BatchNorm2d(self.layer0_params_all[0])(cnn_1)
+    cnn_1 = nn.ReLU()(cnn_1)
+    cnn_1 = self.cnn_1_3(cnn_1)
+    cnn_1 = nn.BatchNorm2d(self.layer0_params_all[0])(cnn_1)
+    cnn_1 = nn.ReLU()(cnn_1)
+    cnn_1 = self.cnn_1_4(cnn_1)
+    cnn_1 = nn.BatchNorm2d(self.layer0_params_all[5])(cnn_1)
+    cnn_1 = nn.ReLU()(cnn_1)
+
+    # CNN forward pass for the 2nd calorimeter layer image (input: l2)
+    cnn_2 = self.cnn_2_1(l2) 
+    cnn_2 = nn.BatchNorm2d(self.layer0_params_all[0])(cnn_2)
+    cnn_2 = nn.ReLU()(cnn_2)
+    cnn_2 = self.cnn_2_2(cnn_2) 
+    cnn_2 = nn.BatchNorm2d(self.layer0_params_all[0])(cnn_2)
+    cnn_2 = nn.ReLU()(cnn_2)
+    cnn_2 = self.cnn_2_3(cnn_2)
+    cnn_2 = nn.BatchNorm2d(self.layer0_params_all[0])(cnn_2)
+    cnn_2 = nn.ReLU()(cnn_2)
+    cnn_2 = self.cnn_2_4(cnn_2)
+    cnn_2 = nn.BatchNorm2d(self.layer0_params_all[5])(cnn_2)
+    cnn_2 = nn.ReLU()(cnn_2)
+
+    # flatten, concatenate outputs from CNN forward passes 
+    x = torch.cat((flatten(cnn_0),flatten(cnn_1),flatten(cnn_2)), dim=1)
+
+    # fully connected net forward pass 
+    fc = self.lin_1(x) 
+    fc = nn.BatchNorm1d(self.fc_all[1])(fc) 
+    fc = nn.ReLU()(fc) 
+    fc = nn.Dropout(self.fc_all[5])(fc) 
+    fc = self.lin_2(fc) 
+    fc = nn.BatchNorm1d(self.fc_all[2])(fc) 
+    fc = nn.ReLU()(fc) 
+    fc = nn.Dropout(self.fc_all[5])(fc) 
+    fc = self.lin_3(fc) 
+    fc = nn.BatchNorm1d(self.fc_all[3])(fc) 
+    fc = nn.ReLU()(fc) 
+    fc = nn.Dropout(self.fc_all[5])(fc) 
+    scores = self.lin_final(fc) 
+  
+    return scores 
