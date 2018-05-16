@@ -169,7 +169,7 @@ def sigBkgEff(m, loader, signalNode):
         effs.append(eff)
     
     plt.legend()
-    plt.xlabel(disc,fontsize=14)
+    plt.xlabel(xlabel,fontsize=14)
     plt.ylabel('"Normalized" counts')
     #plt.savefig('../figures/disc_{}.jpg'.format(m.modelName))
     plt.show()
