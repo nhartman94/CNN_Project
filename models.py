@@ -42,7 +42,7 @@ class FCNet(nn.Module):
 
        self.dropout = p
 
-       #self.modelName = "fc_{}_{}"
+       self.modelName = "fc_{}_{}_{}_dpt_{}".format(h1_dim, h2_dim, h3_dim,p)
 
      
     def forward(self, layer0, layer1, layer2):

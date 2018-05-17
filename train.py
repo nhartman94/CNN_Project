@@ -58,16 +58,23 @@ def check_loss(loader, model):
             scores = model(l0, l1, l2)
             loss = F.cross_entropy(scores, y) 
 
-def train(loader_train, loader_val, model, optimizer, epochs=1):
+
+def train(loader_train, loader_val, model, optimizer, epochs=1, returnBest=False):
     """
     Train a model on CIFAR-10 using the PyTorch Module API.
     
     Inputs:
-    - model: A PyTorch Module giving the model to train.
-    - optimizer: An Optimizer object we will use to train the model
+    - loader_train: DataLoader for the training set
+    - loader_val: DataLoader for the validation set
+    - model: A PyTorch model to train.
+    - optimizer: An optimizer object we will use to train the model
     - epochs: (Optional) A Python integer giving the number of epochs to train for
 
-    Returns: Nothing, but prints model accuracies during training.
+    Returns: 
+    - history: A dictionary object with the training loss over each iteration,
+               and training / val accuracies for each epoch
+    If returnBest is True, it also returns the model at the best epoch
+
     """
     print_every=100
 
@@ -79,7 +86,12 @@ def train(loader_train, loader_val, model, optimizer, epochs=1):
     #hist['val_loss'] = []
     hist['val_acc'] = []
 
+    bestModel = None
+    bestValAcc = 0
+
     for e in range(epochs):
+
+        print("\nEpoch {}/{}:".format(e+1,epochs))
 
         for t, (l0, l1, l2, y) in enumerate(loader_train):
             model.train()  # put model to training mode
@@ -113,7 +125,22 @@ def train(loader_train, loader_val, model, optimizer, epochs=1):
         hist['acc'] .append(check_accuracy(loader_train, model, returnAcc=True)) 
         hist['val_acc'] .append(check_accuracy(loader_val, model, returnAcc=True)) 
 
-    return hist
+        # Check if this model has the best validation accuracy 
+        if hist['val_acc'][-1] > bestValAcc:
+            bestValAcc = hist['val_acc'][-1] 
+            bestModel = model
+
+    # Save the weights for the best model
+    if model.modelName is not None:
+        # https://pytorch.org/docs/master/notes/serialization.html
+        # https://github.com/pytorch/examples/blob/master/imagenet/main.py#L139
+        torch.save(model.state_dict(), "../models/{}.pth.tar".format(model.modelName))
+
+
+    if returnBest:
+        return hist, bestModel
+    else:
+        return hist
 
 def train_ThreeCNN(loader_train, loader_val, layer0_model, layer1_model, layer2_model, fc_model, optimizer, epochs=1):
     """
