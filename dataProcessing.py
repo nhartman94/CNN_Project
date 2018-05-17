@@ -110,8 +110,6 @@ def getDataLoaders(batch_size=64):
         idxVal += [j for j in range(int((i+trainFrac)*N), int((i+trainFrac+valFrac)*N))]
         idxTest += [j for j in range(int((i+trainFrac+valFrac)*N), (i+1)*N)]
     
-    print(max(self.y[idxVal]))
-    
     loader_train = DataLoader(dset, batch_size=batch_size, sampler=SubsetRandomSampler(idxTrain))
     loader_val = DataLoader(dset, batch_size=batch_size, sampler=SubsetRandomSampler(idxVal))
     loader_test = DataLoader(dset, batch_size=batch_size, sampler=SubsetRandomSampler(idxTest))
