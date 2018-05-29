@@ -8,9 +8,10 @@ import torch.nn.functional as F
 # Some useful global variables to use across functions
 if torch.cuda.is_available():
     device = torch.device('cuda')
+    dtype = torch.cuda.float32
 else:
     device = torch.device('cpu')
-dtype = torch.float32
+    dtype = torch.float32
 
 def check_accuracy(loader, model, returnAcc=False):
 
