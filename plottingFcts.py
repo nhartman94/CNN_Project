@@ -11,6 +11,7 @@ from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
+import matplotlib.ticker as ticker
 import h5py
 
 import torch
@@ -60,42 +61,6 @@ def trainingMetrics(hist, modelName=''):
         plt.savefig('../figures/acc_{}.jpg'.format(modelName))
     plt.show()
 
-
-def plotProbs(m, loader):
-
-    '''
-    Plot histograms of the output nodes        
-      0: gamma
-      1: pi+
-      2: e+
-
-   Input: 
-        m: A PyTorch model
-        loader: DataLoader 
-    '''
-
-    predictions = []
-
-    with torch.no_grad():
-        for l0, l1, l2, y in loader:
-            l0 = l0.to(device=device, dtype=dtype)  # move to device, e.g. GPU
-            l1 = l1.to(device=device, dtype=dtype)
-            l2 = l2.to(device=device, dtype=dtype)
-            y = y.to(device=device, dtype=torch.long)
-            scores = m(l0, l1, l2)
-            probs = Softmax(dim=1)(scores)
-            #print(probs.shape)
-            predictions.append(probs.numpy())
-
-
-    # Need stack the probabilities from the mini-batches
-    predictions = np.concatenate(tuple(predictions),axis=0)
-
-    '''
-    To do: Plot the output for the nodes for each type of shower 
-    '''
- 
-
 def sigBkgEff(m, loader, signalNode):
     
     '''
@@ -124,16 +89,12 @@ def sigBkgEff(m, loader, signalNode):
             y = y.to(device=device, dtype=torch.long)
             scores = m(l0, l1, l2)
             probs = Softmax(dim=1)(scores)
-            #print(probs.shape)
             predictions.append(probs.numpy())
             y_test.append(y.numpy())
     
     # Need stack the probabilities from the mini-batches
     predictions = np.concatenate(tuple(predictions),axis=0) 
     y_test = np.concatenate(tuple(y_test),axis=0) 
-
-    print("Min / max of y_test")
-    print(np.min(y_test),np.max(y_test))
     
     if signalNode == 0: 
         disc = np.log(np.divide(predictions[:,0], predictions[:,1] + predictions[:,2]))
@@ -152,9 +113,6 @@ def sigBkgEff(m, loader, signalNode):
     # using the observed data   
     discMax = np.max(disc)
     discMin = np.min(disc)
-
-    print(disc.shape)   
-    print(discMin, discMax)   
  
     myRange=(discMin,discMax) 
     nBins = 200
@@ -171,14 +129,72 @@ def sigBkgEff(m, loader, signalNode):
         # Calculate the baseline signal and bkg efficiencies 
         eff = np.add.accumulate(nEntries[::-1]) / np.sum(nEntries)
         effs.append(eff)
-    
+   
+    particles = ['gamma','pi','e']
+ 
     plt.legend()
     plt.xlabel(xlabel,fontsize=14)
     plt.ylabel('"Normalized" counts')
-    #plt.savefig('../figures/disc_{}.jpg'.format(m.modelName))
+    if m.modelName is not None:
+        plt.savefig('../figures/disc_{}_{}.jpg'.format(particles[signalNode],m.modelName))
     plt.show()
 
+
     return effs
+
+def plotConfusion(m, loader, title=''):
+    '''
+    Plot the confusion matrix for the p'cle classes
+    Inputs:
+    - m: Pytorch model
+    - loader: DataLoader
+    - title: Optional argument for the title of the confusion matrix
+ 
+    '''
+
+    n_categories = 3 
+    confusion = np.zeros((n_categories, n_categories))
+
+    with torch.no_grad():
+        for l0, l1, l2, y in loader:
+            l0 = l0.to(device=device, dtype=dtype)  # move to device, e.g. GPU
+            l1 = l1.to(device=device, dtype=dtype)
+            l2 = l2.to(device=device, dtype=dtype)
+            y = y.to(device=device, dtype=torch.long)
+            scores = m(l0, l1, l2)
+            preds = np.argmax(scores, axis=1)
+            for yi,pi in zip(y, preds): confusion[yi][pi] += 1
+
+    # Normalize by dividing every row by its sum
+    for i in range(n_categories):
+        confusion[i] = confusion[i] / confusion[i].sum()
+        
+    # Set up plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    cax = ax.matshow(confusion,cmap="PuRd")
+    fig.colorbar(cax)
+    
+    # Set up axes
+    all_categories = ['$\gamma$','$\pi^+$','$e^+$']
+    ax.set_xticklabels([''] + all_categories, rotation=90)
+    ax.set_yticklabels([''] + all_categories)
+    
+    # Force label at every tick
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    if len(title) > 0:
+        plt.title(title)
+
+    if m.modelName is not None:
+        plt.savefig("../figures/confusion_{}.jpg".format(m.modelName))
+    
+    plt.show()
+
+
 
 def plotROC(teffs, beffs, labels, title='', tag='', styles=None, colors=None, ymax=-1):
     '''
