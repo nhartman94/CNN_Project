@@ -311,7 +311,8 @@ class ThreeCNN_Module(nn.Module):
     self.cnn_2_3 = nn.Conv2d(self.layer2_params_all[0], self.layer2_params_all[0], (self.layer2_params_all[1], self.layer2_params_all[2]), stride=self.layer2_params_all[3], padding=self.layer2_params_all[4])
     self.cnn_2_4 = nn.Conv2d(self.layer2_params_all[0], self.layer2_params_all[5], (self.layer2_params_all[6], self.layer2_params_all[7]), stride=self.layer2_params_all[8], padding=self.layer2_params_all[9])
     
-    # optional CNN preprocessing layer 
+    # optional CNN preprocessing layer
+    # initially, this layer will also be volume-preserving 
     if self.flag: 
         self.cnn_3_1 = nn.Conv2d(3, self.layer3_params_all[0], (self.layer3_params_all[1], self.layer3_params_all[2]), stride=self.layer3_params_all[3], padding=self.layer3_params_all[4])
 
@@ -373,11 +374,15 @@ class ThreeCNN_Module(nn.Module):
     
     # optional CNN preprocessing 
     if self.flag: 
-        cnn0 = torch.unsqueeze(cnn0, 0) 
-        cnn1 = torch.unsqueeze(cnn1, 0) 
-        cnn2 = torch.unsqueeze(cnn2, 0) 
+        """
+        Unsqueezing unecessary, because the shape of each cnn_i activation map from the above 
+        is (batch_size, 1, 3, 6). So we can just concatenate along dimension 1 
+        cnn_0 = torch.unsqueeze(cnn_0, 0) 
+        cnn_1 = torch.unsqueeze(cnn_1, 0) 
+        cnn_2 = torch.unsqueeze(cnn_2, 0) 
+        """
         # x.shape = (3, 3, 6) 
-        x = torch.cat(cnn_0, cnn_1, cnn_2, 0) 
+        x = torch.cat((cnn_0, cnn_1, cnn_2), dim=1) 
         
         # preprocessing CNN layer 
         cnn_3 = self.cnn_3_1(x) 
