@@ -230,7 +230,7 @@ class ThreeCNN(nn.Module):
 
 class ThreeCNN_Module(nn.Module):
     
-  def __init__(self, layer0_params, layer0_reduce, layer1_params, layer1_reduce, layer2_params, layer2_reduce, fc_params):
+  def __init__(self, layer0_params, layer0_reduce, layer1_params, layer1_reduce, layer2_params, layer2_reduce, fc_params, layer3_params=[], flag=False):
 
     """
     Identical to the class ThreeCNN above, but uses the module API for easier integration with already-written training 
@@ -249,7 +249,12 @@ class ThreeCNN_Module(nn.Module):
       fc_params = [input_dimension, h1_dim, d2_dim, h3_dim, out_dimension, p]
 
     where input_dimension = 18*3 = 54 for this case, hi_dim is the number of dimensions in the ith hidden layer, and 
-    p is the probability of keeping a given node during drouput. 
+    p is the probability of keeping a given node during drouput.
+    
+    The "flag" input, if set to True, places an extra convolutional layer [Conv --> Batchnorm --> ReLU] before flattening and
+    the fully connected layer. It's default value is False. 
+    Similarly, layer3_params contains the parameters for the extra processig layer between the three seperate CNN layers and 
+    the final fc layer. 
 
     """
 
@@ -267,6 +272,10 @@ class ThreeCNN_Module(nn.Module):
     self.layer0_params_all = []
     self.layer1_params_all = []
     self.layer2_params_all = []
+    self.flag = flag
+    if self.flag: 
+        # load CNN preprocessing layer 
+        self.layer3_params_all = layer3_params
     self.fc_all = [] 
 
     # load volume-preserving layers 
@@ -301,12 +310,18 @@ class ThreeCNN_Module(nn.Module):
     self.cnn_2_2 = nn.Conv2d(self.layer2_params_all[0], self.layer2_params_all[0], (self.layer2_params_all[1], self.layer2_params_all[2]), stride=self.layer2_params_all[3], padding=self.layer2_params_all[4])
     self.cnn_2_3 = nn.Conv2d(self.layer2_params_all[0], self.layer2_params_all[0], (self.layer2_params_all[1], self.layer2_params_all[2]), stride=self.layer2_params_all[3], padding=self.layer2_params_all[4])
     self.cnn_2_4 = nn.Conv2d(self.layer2_params_all[0], self.layer2_params_all[5], (self.layer2_params_all[6], self.layer2_params_all[7]), stride=self.layer2_params_all[8], padding=self.layer2_params_all[9])
+    
+    # optional CNN preprocessing layer 
+    if self.flag: 
+        self.cnn_3_1 = nn.Conv2d(3, self.layer3_params_all[0], (self.layer3_params_all[1], self.layer3_params_all[2]), stride=self.layer3_params_all[3], padding=self.layer3_params_all[4])
 
     # FC parameters 
     self.lin_1 = nn.Linear(self.fc_all[0], self.fc_all[1])
     self.lin_2 = nn.Linear(self.fc_all[1], self.fc_all[2])
     self.lin_3 = nn.Linear(self.fc_all[2], self.fc_all[3])
     self.lin_final = nn.Linear(self.fc_all[3], self.fc_all[4])
+    
+    self.modelName = "model" 
 
   def forward(self, l0, l1, l2):
 
@@ -355,9 +370,25 @@ class ThreeCNN_Module(nn.Module):
     cnn_2 = self.cnn_2_4(cnn_2)
     cnn_2 = nn.BatchNorm2d(self.layer0_params_all[5])(cnn_2)
     cnn_2 = nn.ReLU()(cnn_2)
+    
+    # optional CNN preprocessing 
+    if self.flag: 
+        cnn0 = torch.unsqueeze(cnn0, 0) 
+        cnn1 = torch.unsqueeze(cnn1, 0) 
+        cnn2 = torch.unsqueeze(cnn2, 0) 
+        # x.shape = (3, 3, 6) 
+        x = torch.cat(cnn_0, cnn_1, cnn_2, 0) 
+        
+        # preprocessing CNN layer 
+        cnn_3 = self.cnn_3_1(x) 
+        cnn_3 = nn.BatchNorm2d(self.layer3_params_all[0])(cnn_3) 
+        cnn_3 = nn.ReLU()(cnn_3) 
 
-    # flatten, concatenate outputs from CNN forward passes 
-    x = torch.cat((flatten(cnn_0),flatten(cnn_1),flatten(cnn_2)), dim=1)
+    # flatten, concatenate outputs from CNN forward passes / preprocess  
+    if self.flag: 
+        x = flatten(cnn_3) 
+    else: 
+        x = torch.cat((flatten(cnn_0),flatten(cnn_1),flatten(cnn_2)), dim=1)
 
     # fully connected net forward pass 
     fc = self.lin_1(x) 

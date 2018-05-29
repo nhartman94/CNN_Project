@@ -136,11 +136,11 @@ def train(loader_train, loader_val, model, optimizer, epochs=1, returnBest=False
         # https://github.com/pytorch/examples/blob/master/imagenet/main.py#L139
         torch.save(model.state_dict(), "../models/{}.pth.tar".format(model.modelName))
 
-
     if returnBest:
         return hist, bestModel
     else:
         return hist
+
 
 def train_ThreeCNN(loader_train, loader_val, layer0_model, layer1_model, layer2_model, fc_model, optimizer, epochs=1):
     """
