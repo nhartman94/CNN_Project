@@ -89,8 +89,8 @@ def sigBkgEff(m, loader, signalNode):
             y = y.to(device=device, dtype=torch.long)
             scores = m(l0, l1, l2)
             probs = Softmax(dim=1)(scores)
-            predictions.append(probs.numpy())
-            y_test.append(y.numpy())
+            predictions.append(probs.cpu().numpy())
+            y_test.append(y.cpu().numpy())
     
     # Need stack the probabilities from the mini-batches
     predictions = np.concatenate(tuple(predictions),axis=0) 
@@ -234,7 +234,7 @@ def plotROC(teffs, beffs, labels, title='', tag='', styles=None, colors=None, ym
         plt.title(title)
         
     # Set the axes to be in a reasonable range    
-    plt.xlim(0.6,1)
+    plt.xlim(0.8,1)
     plt.ylim(1,1e3)
     plt.legend(loc='best')
 

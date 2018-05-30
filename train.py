@@ -139,7 +139,7 @@ def train(loader_train, loader_val, model, optimizer, epochs=1, returnBest=False
     if model.modelName is not None:
         # https://pytorch.org/docs/master/notes/serialization.html
         # https://github.com/pytorch/examples/blob/master/imagenet/main.py#L139
-        torch.save(model.state_dict(), "../models/{}.pth.tar".format(model.modelName))
+        torch.save(bestModel.state_dict(), "../models/{}.pth.tar".format(model.modelName))
 
     if returnBest:
         return hist, bestModel
