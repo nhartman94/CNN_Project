@@ -32,8 +32,7 @@ https://data.mendeley.com/datasets/pvn3xc3wy5/1
 ## To Do:
 **Visualization:**
 - t-SNE for the separation of classes
-- Occlusion test to see whch sections of the input img are most important for classifying the output
-- 
+- Occlusion test to see whch sections of the input image are most important for classifying the output
 
 **Algorithms:**
 - 3d-CNN
