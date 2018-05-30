@@ -44,10 +44,6 @@ class FCNet(nn.Module):
        self.bn2 = nn.BatchNorm1d(h2_dim)
        self.bn3 = nn.BatchNorm1d(h3_dim)
 
-       # self.h1_dim = h1_dim
-       # self.h2_dim = h2_dim
-       # self.h3_dim = h3_dim
-
        self.dropout = p
 
        self.modelName = "fc_{}_{}_{}_dpt_{}".format(h1_dim, h2_dim, h3_dim,p)
@@ -423,13 +419,15 @@ class ThreeCNN_Module(nn.Module):
 '''
 These two sequential models cast the layers as 12x12 images
 '''
-layer0_12x12 = nn.Sequential(  nn.Conv2d(1,1, (1,8), stride=(1,8)),
-                                    nn.ReLU(),
-                                    nn.ConvTranspose2d(1,1, (4,1), stride=(4,1)),
-                                    nn.ReLU()
-                                 )
+layer0_12x12 = lambda nF1,nF2: nn.Sequential( nn.Conv2d(1,nF1, (1,8), stride=(1,8)),
+                                              nn.ReLU(),
+                                              nn.ConvTranspose2d(nF1,nF2, (4,1), stride=(4,1)),
+                                              nn.ReLU()
+                                           )
+
+layer1_12x12 = lambda nF: nn.Sequential(nn.Conv2d(1,nF,(3,3),stride=1,padding=1))
     
-layer2_12x12 = nn.Sequential(nn.ConvTranspose2d(1,1, (1,2), stride=(1,2)),
+layer2_12x12 = lambda nF: nn.Sequential(nn.ConvTranspose2d(1,nF, (1,2), stride=(1,2)),
                                   nn.ReLU())
 
 
@@ -446,31 +444,23 @@ class CNN_3d(nn.Module):
 
 
     '''
-    def __init__(self, nFilters_1 = 16, filter_1=(3,4,4), stride_1=(2,2,2), padding_1=(1,1,1),
-                        nFilters_2 = 8,  filter_2=(2,2,2), stride_2=(1,2,2), padding_2=(0,1,1),
-                        h1_dim=50, h2_dim=25, p=0.5):
+    def __init__(self, nF1=4, nF2=8, 
+                 nFilters_1 = 16, filter_1=(3,4,4), stride_1=(2,2,2), padding_1=(1,1,1),
+                 nFilters_2 = 8,  filter_2=(2,2,2), stride_2=(1,2,2), padding_2=(0,1,1),
+                 h1_dim=50, h2_dim=25, p=0.5):
 
        super().__init__()
 
-       self.layer0_12x12 = layer0_12x12
-       self.layer2_12x12 = layer2_12x12
-
-       # self.l0_downsample = nn.Conv2d(1,1, (1,8), stride=(1,8))
-       # self.l0_upsample = nn.ConvTranspose2d(1,1, (4,1), stride=(4,1))
-       # self.l2_upsample = nn.ConvTranspose2d(1,1, (1,2), stride=(1,2))
-
-       # self.layer0_12x12 = nn.Sequential(  nn.Conv2d(1,1, (1,8), stride=(1,8)),
-       #                                     nn.ReLU(),
-       #                                     nn.ConvTranspose2d(1,1, (4,1), stride=(4,1)),
-       #                                     nn.ReLU()
-       #                                  )
-       # self.layer2_12x12 = nn.Sequential(nn.ConvTranspose2d(1,1, (1,2), stride=(1,2)),
-       #                                   nn.ReLU())
+       self.layer0_12x12 = layer0_12x12(nF1,nF2)
+       self.layer1_12x12 = layer1_12x12(nF2)
+       self.layer2_12x12 = layer2_12x12(nF2)
+       self.nF1 = nF1
+       self.nF2 = nF2
 
        nOut = 3
        spatialDim = 12
 
-       self.cnn3d_1 = nn.Conv3d(1, nFilters_1, filter_1, stride_1, padding_1)
+       self.cnn3d_1 = nn.Conv3d(nF2, nFilters_1, filter_1, stride_1, padding_1)
        self.bn3d_1 = nn.BatchNorm3d(nFilters_1)
 
        # Calculate the number of input dimensions seen by each of the inputs
@@ -493,10 +483,12 @@ class CNN_3d(nn.Module):
 
        self.fc1 = nn.Linear(fc_inpt, h1_dim) 
        self.fc2 = nn.Linear(h1_dim, h2_dim) 
-       self.fc3 = nn.Linear(h2_dim, nOut) 
+       self.fc3 = nn.Linear(h2_dim, nOut) #h3_dim) 
+       #self.fc4 = nn.Linear(h3_dim, nOut) 
 
        self.bn1 = nn.BatchNorm1d(h1_dim)
        self.bn2 = nn.BatchNorm1d(h2_dim)
+       #self.bn3 = nn.BatchNorm1d(h3_dim)
  
        self.dropout = p
 
@@ -506,15 +498,11 @@ class CNN_3d(nn.Module):
     def forward(self, layer0, layer1, layer2):
 
         # Call the functions above to make the input dim of the three layers the same 
-        l0 = self.layer0_12x12(layer0).view(-1,1,1,12,12)
-        # l0 = self.l0_downsample(layer0)
-        # l0 = nn.ReLU()(l0)
-        # l0 = self.l0_upsample(l0)
-        # l0 = nn.ReLU()(l0)
-        # l0 = l0.view(-1,1,1,12,12)
-
-        l1 = layer1.view(-1,1,1,12,12)
-        l2 = self.layer2_12x12(layer2).view(-1,1,1,12,12)
+        l0 = self.layer0_12x12(layer0).view(-1,self.nF2,1,12,12)
+        #l1 = layer1.view(-1,1,1,12,12)
+        #l1 = torch.cat(tuple([layer1.view(-1,1,1,12,12)]*self.nF2),dim=1)
+        l1 = self.layer1_12x12(layer1).view(-1,self.nF2,1,12,12)
+        l2 = self.layer2_12x12(layer2).view(-1,self.nF2,1,12,12)
 
         # Concatenate the inputs
         # Pytorch's 3d conv expects an input with shape (N, C_{in}, D, H, W)
@@ -541,6 +529,12 @@ class CNN_3d(nn.Module):
         y = self.fc2(y)
         y = self.bn2(y)
         y = nn.ReLU()(y)
+        #y = nn.Dropout(self.dropout)(y)
+
+        # Third fc layer
+        #y = self.fc3(y)
+        #y = self.bn3(y)
+        #y = nn.ReLU()(y)
 
         # Output scores
         scores = self.fc3(y)            
