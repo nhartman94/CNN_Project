@@ -36,9 +36,13 @@ class FCNet(nn.Module):
        self.fc3 = nn.Linear(h2_dim, h3_dim)
        self.fc4 = nn.Linear(h3_dim, nOut)
 
-       self.h1_dim = h1_dim
-       self.h2_dim = h2_dim
-       self.h3_dim = h3_dim
+       self.bn1 = nn.BatchNorm1d(h1_dim)
+       self.bn2 = nn.BatchNorm1d(h2_dim)
+       self.bn3 = nn.BatchNorm1d(h3_dim)
+
+       # self.h1_dim = h1_dim
+       # self.h2_dim = h2_dim
+       # self.h3_dim = h3_dim
 
        self.dropout = p
 
@@ -52,20 +56,20 @@ class FCNet(nn.Module):
 
         # First hidden layer
         h1 = self.fc1(x)
-        h1 = nn.BatchNorm1d(self.h1_dim)(h1)
+        h1 = self.bn1(h1)
         h1 = nn.ReLU()(h1)
         h1 = nn.Dropout(self.dropout)(h1)
 
         # Second hidden layer
         h2 = self.fc2(h1)
-        h2 = nn.BatchNorm1d(self.h2_dim)(h2)
+        h2 = self.bn2(h2) 
         h2 = nn.ReLU()(h2)
         h2 = nn.Dropout(self.dropout)(h2)
 
         # Third hidden layer
         # DON'T PUT ANY DROPOUT JUST BEFORE THE OUTPUT NODE
         h3 = self.fc3(h2)
-        h3 = nn.BatchNorm1d(self.h3_dim)(h3)
+        h3 = self.bn3(h3)
         h3 = nn.ReLU()(h3)
        
         # To output classification
@@ -415,14 +419,14 @@ class ThreeCNN_Module(nn.Module):
 '''
 These two sequential models cast the layers as 12x12 images
 '''
-layer0_12x12 = nn.Sequential(  nn.Conv2d(1,1, (1,8), stride=(1,8)),
-                                    nn.ReLU(),
-                                    nn.ConvTranspose2d(1,1, (4,1), stride=(4,1)),
-                                    nn.ReLU()
-                                 )
+#layer0_12x12 = nn.Sequential(  nn.Conv2d(1,1, (1,8), stride=(1,8)),
+#                                    nn.ReLU(),
+#                                    nn.ConvTranspose2d(1,1, (4,1), stride=(4,1)),
+#                                    nn.ReLU()
+#                                 )
      
-layer2_12x12 = nn.Sequential(nn.ConvTranspose2d(1,1, (1,2), stride=(1,2)),
-                                  nn.ReLU())
+#layer2_12x12 = nn.Sequential(nn.ConvTranspose2d(1,1, (1,2), stride=(1,2)),
+#                                  nn.ReLU())
 
 
 class CNN_3d(nn.Module):
@@ -432,20 +436,32 @@ class CNN_3d(nn.Module):
     applies a 3d convolution to the inputs  
     '''
 
-       '''
-      
-       Inputs:
+    '''
+   
+    Inputs:
 
- 
-       '''
-     def __init__(self, nFilters_1 = 16, filter_1=(3,4,4), stride_1=(2,2,2), padding_1=(1,1,1),
+
+    '''
+    def __init__(self, nFilters_1 = 16, filter_1=(3,4,4), stride_1=(2,2,2), padding_1=(1,1,1),
                         nFilters_2 = 8,  filter_2=(2,2,2), stride_2=(1,2,2), padding_2=(0,1,1),
                         h1_dim=50, h2_dim=25, p=0.5):
 
        super().__init__()
 
-       self.layer0_12x12 = layer0_12x12
-       self.layer2_12x12 = layer2_12x12
+       # self.layer0_12x12 = layer0_12x12
+       # self.layer2_12x12 = layer2_12x12
+
+       self.layer0_12x12 = nn.Sequential(  nn.Conv2d(1,1, (1,8), stride=(1,8)),
+                                    nn.ReLU(),
+                                    nn.ConvTranspose2d(1,1, (4,1), stride=(4,1)),
+                                    nn.ReLU()
+                                 )
+     
+       self.layer2_12x12 = nn.Sequential(nn.ConvTranspose2d(1,1, (1,2), stride=(1,2)),
+                                  nn.ReLU())
+
+
+
 
        nOut = 3
        spatialDim = 12

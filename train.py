@@ -8,10 +8,9 @@ import torch.nn.functional as F
 # Some useful global variables to use across functions
 if torch.cuda.is_available():
     device = torch.device('cuda')
-    dtype = torch.cuda.float32
 else:
     device = torch.device('cpu')
-    dtype = torch.float32
+dtype = torch.float32
 
 def check_accuracy(loader, model, returnAcc=False):
 
@@ -28,12 +27,17 @@ def check_accuracy(loader, model, returnAcc=False):
     num_correct = 0
     num_samples = 0
     model.eval()  # set model to evaluation mode
+
+    print(device)
+    model = model.to(device=device)
+
     with torch.no_grad():
         for l0, l1, l2, y in loader:
             l0 = l0.to(device=device, dtype=dtype)  # move to device, e.g. GPU
             l1 = l1.to(device=device, dtype=dtype)
             l2 = l2.to(device=device, dtype=dtype)
             y = y.to(device=device, dtype=torch.long)
+
             scores = model(l0, l1, l2)
             _, preds = scores.max(1)
             num_correct += (preds == y).sum()
