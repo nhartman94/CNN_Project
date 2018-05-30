@@ -12,6 +12,10 @@ import torch.nn as nn
 def flatten(x):
     N = x.shape[0] # read in N, H, W
     return x.view(N, -1)  # "flatten" the H * W values into a single vector per image
+
+
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
  
 
 """
@@ -419,14 +423,14 @@ class ThreeCNN_Module(nn.Module):
 '''
 These two sequential models cast the layers as 12x12 images
 '''
-#layer0_12x12 = nn.Sequential(  nn.Conv2d(1,1, (1,8), stride=(1,8)),
-#                                    nn.ReLU(),
-#                                    nn.ConvTranspose2d(1,1, (4,1), stride=(4,1)),
-#                                    nn.ReLU()
-#                                 )
-     
-#layer2_12x12 = nn.Sequential(nn.ConvTranspose2d(1,1, (1,2), stride=(1,2)),
-#                                  nn.ReLU())
+layer0_12x12 = nn.Sequential(  nn.Conv2d(1,1, (1,8), stride=(1,8)),
+                                    nn.ReLU(),
+                                    nn.ConvTranspose2d(1,1, (4,1), stride=(4,1)),
+                                    nn.ReLU()
+                                 )
+    
+layer2_12x12 = nn.Sequential(nn.ConvTranspose2d(1,1, (1,2), stride=(1,2)),
+                                  nn.ReLU())
 
 
 class CNN_3d(nn.Module):
@@ -448,20 +452,20 @@ class CNN_3d(nn.Module):
 
        super().__init__()
 
-       # self.layer0_12x12 = layer0_12x12
-       # self.layer2_12x12 = layer2_12x12
+       self.layer0_12x12 = layer0_12x12
+       self.layer2_12x12 = layer2_12x12
 
-       self.layer0_12x12 = nn.Sequential(  nn.Conv2d(1,1, (1,8), stride=(1,8)),
-                                    nn.ReLU(),
-                                    nn.ConvTranspose2d(1,1, (4,1), stride=(4,1)),
-                                    nn.ReLU()
-                                 )
-     
-       self.layer2_12x12 = nn.Sequential(nn.ConvTranspose2d(1,1, (1,2), stride=(1,2)),
-                                  nn.ReLU())
+       # self.l0_downsample = nn.Conv2d(1,1, (1,8), stride=(1,8))
+       # self.l0_upsample = nn.ConvTranspose2d(1,1, (4,1), stride=(4,1))
+       # self.l2_upsample = nn.ConvTranspose2d(1,1, (1,2), stride=(1,2))
 
-
-
+       # self.layer0_12x12 = nn.Sequential(  nn.Conv2d(1,1, (1,8), stride=(1,8)),
+       #                                     nn.ReLU(),
+       #                                     nn.ConvTranspose2d(1,1, (4,1), stride=(4,1)),
+       #                                     nn.ReLU()
+       #                                  )
+       # self.layer2_12x12 = nn.Sequential(nn.ConvTranspose2d(1,1, (1,2), stride=(1,2)),
+       #                                   nn.ReLU())
 
        nOut = 3
        spatialDim = 12
@@ -503,8 +507,14 @@ class CNN_3d(nn.Module):
 
         # Call the functions above to make the input dim of the three layers the same 
         l0 = self.layer0_12x12(layer0).view(-1,1,1,12,12)
+        # l0 = self.l0_downsample(layer0)
+        # l0 = nn.ReLU()(l0)
+        # l0 = self.l0_upsample(l0)
+        # l0 = nn.ReLU()(l0)
+        # l0 = l0.view(-1,1,1,12,12)
+
         l1 = layer1.view(-1,1,1,12,12)
-        l2 = layer2_12x12(layer2).view(-1,1,1,12,12)
+        l2 = self.layer2_12x12(layer2).view(-1,1,1,12,12)
 
         # Concatenate the inputs
         # Pytorch's 3d conv expects an input with shape (N, C_{in}, D, H, W)
