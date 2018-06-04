@@ -13,14 +13,13 @@ trainFrac = .6
 valFrac = .1
 testFrac = .3
 
-N = 100000 # 100k events / particle
 nClasses = 3
 
 
 class emShowersDatasetFlat(Dataset):
     """EM showers dataset"""
     
-    def __init__(self, relPath='../data/', N=N, trainFrac=trainFrac, transform=None):
+    def __init__(self, N, relPath='../data/', trainFrac=trainFrac, transform=None):
         """
         
         Instantiates a class which then returns examples as a tuple for the 
@@ -87,7 +86,7 @@ class emShowersDatasetFlat(Dataset):
         
         return self.layer0[idx], self.layer1[idx], self.layer2[idx], self.y[idx]
 
-def getDataLoaders(batch_size=64):
+def getDataLoaders(batch_size=64, N=-1):
     '''
 
     Input: batch_size
@@ -97,8 +96,11 @@ def getDataLoaders(batch_size=64):
  
     '''
 
+    if N != -1:
+        N = 100000 # 100k events / particle
+
     nClasses = 3
-    dset = emShowersDatasetFlat()
+    dset = emShowersDatasetFlat(N=N)
     
     idxTrain = []
     idxVal = []
