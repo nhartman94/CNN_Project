@@ -56,9 +56,9 @@ class emShowersDatasetFlat(Dataset):
         layer1_mean = (l1_gamma_mean + l1_piplus_mean + l1_eplus_mean) / 3.
         layer2_mean = (l2_gamma_mean + l2_piplus_mean + l2_eplus_mean) / 3.
         
-        layer0 = np.vstack((d_gamma['layer_0'][:], d_piplus['layer_0'][:], d_eplus['layer_0'][:]))
-        layer1 = np.vstack((d_gamma['layer_1'][:], d_piplus['layer_1'][:], d_eplus['layer_1'][:]))
-        layer2 = np.vstack((d_gamma['layer_2'][:], d_piplus['layer_2'][:], d_eplus['layer_2'][:]))
+        layer0 = np.vstack((d_gamma['layer_0'][:N], d_piplus['layer_0'][:N], d_eplus['layer_0'][:N]))
+        layer1 = np.vstack((d_gamma['layer_1'][:N], d_piplus['layer_1'][:N], d_eplus['layer_1'][:N]))
+        layer2 = np.vstack((d_gamma['layer_2'][:N], d_piplus['layer_2'][:N], d_eplus['layer_2'][:N]))
         
         # Reshape the tensors as NxCxHxW, with C=1 in this case :)
         m0,h0,w0 = layer0.shape
