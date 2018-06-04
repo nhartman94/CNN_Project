@@ -819,8 +819,13 @@ class rnn_2dCNN(nn.Module):
     self.cnn_2_3 = nn.Conv2d(self.layer2_params_all[0], self.layer2_params_all[0], (self.layer2_params_all[1], self.layer2_params_all[2]), stride=self.layer2_params_all[3], padding=self.layer2_params_all[4])
     self.cnn_2_4 = nn.Conv2d(self.layer2_params_all[0], self.layer2_params_all[5], (self.layer2_params_all[6], self.layer2_params_all[7]), stride=self.layer2_params_all[8], padding=self.layer2_params_all[9])
     
+    """
     self.num_rnn_layers = rnn_params[2]
     self.cnn_3_1 = nn.Conv1d(self.num_rnn_layers, self.layer3_params_all[0], self.layer3_params_all[1], stride=self.layer3_params_all[3], padding=self.layer3_params_all[4])
+    self.cnn_3_2 = nn.Conv1d(self.layer3_params_all[0], self.layer3_params_all[0], self.layer3_params_all[1], stride=self.layer3_params_all[3], padding=self.layer3_params_all[4]) 
+    self.cnn_3_2 = nn.Conv1d(self.layer3_params_all[0], self.layer3_params_all[0], self.layer3_params_all[1], stride=self.layer3_params_all[3], padding=self.layer3_params_all[4]) 
+    self.cnn_3_3 = nn.Conv1d(self.layer3_params_all[0], self.layer3_params_all[0], self.layer3_params_all[1], stride=self.layer3_params_all[3], padding=self.layer3_params_all[4]) 
+    """
 
     # batchnorm parameters, convolutional layers 
     self.batch_0_1 = nn.BatchNorm2d(self.layer0_params_all[0], track_running_stats=False)
@@ -832,7 +837,7 @@ class rnn_2dCNN(nn.Module):
     self.batch_2_1 = nn.BatchNorm2d(self.layer2_params_all[0], track_running_stats=False)
     self.batch_2_2 = nn.BatchNorm2d(self.layer2_params_all[5], track_running_stats=False)
 
-    self.batch_3_1 = nn.BatchNorm1d(self.layer3_params_all[0], track_running_stats=False)
+    #self.batch_3_1 = nn.BatchNorm1d(self.layer3_params_all[0], track_running_stats=False)
 
     # batchnorm parameters, fc layers 
     self.batch_fc_1 = nn.BatchNorm1d(self.fc_all[1], track_running_stats=False)
@@ -906,13 +911,24 @@ class rnn_2dCNN(nn.Module):
     rnn_final = rnn_out[1] # extract final hidden state 
 
     # CNN processing layer 
+    # currently, these are volume-preserving layers 
+    """
     rnn_final = rnn_final.permute(1, 0, 2)  # takes (num_layers, batch_size, hidden_size) --> (batch_size, num_layers, hidden_size)
     cnn_3 = self.cnn_3_1(rnn_final) 
     cnn_3 = self.batch_3_1(cnn_3) 
     cnn_3 = nn.ReLU()(cnn_3)
+    cnn_3 = self.cnn_3_2(cnn_3)
+    cnn_3 = self.batch_3_1(cnn_3)
+    cnn_3 = nn.ReLU()(cnn_3)
+    cnn_3 = self.cnn_3_3(cnn_3)
+    cnn_3 = self.batch_3_1(cnn_3)
+    cnn_3 = nn.ReLU()(cnn_3)
+    """
 
     # fc layer preprocessing
-    x = flatten(cnn_3)
+    #x = flatten(cnn_3)
+    #x = flatten(rnn_final) 
+    x = rnn_final.view(batch_size, -1) # reshape to (batch_size, 3*6) 
 
     # fully connected net forward pass 
     fc = self.lin_1(x) 
@@ -929,5 +945,5 @@ class rnn_2dCNN(nn.Module):
     fc = nn.Dropout(self.fc_all[5])(fc) 
     scores = self.lin_final(fc) 
   
-    return scores
+    return scores 
 
