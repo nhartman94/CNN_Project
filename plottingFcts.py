@@ -235,7 +235,7 @@ def plotROC(teffs, beffs, labels, title='', tag='', styles=None, colors=None, ym
         
     # Set the axes to be in a reasonable range    
     plt.xlim(0.8,1)
-    plt.ylim(1,1e3)
+    plt.ylim(1,1e4)
     plt.legend(loc='best')
 
     if len(tag) != 0:

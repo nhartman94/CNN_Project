@@ -437,8 +437,12 @@ class ThreeCNN_Module(nn.Module):
 #########################################
 
 '''
+<<<<<<< Updated upstream
 These two sequential models cast the layers as 12x12 images, used as global functions 
 for the 3D CNN below.
+=======
+These sequential models cast the layers as 12x12 images
+>>>>>>> Stashed changes
 '''
 layer0_12x12 = lambda nF1,nF2: nn.Sequential( nn.Conv2d(1,nF1, (1,8), stride=(1,8)),
                                               nn.ReLU(),
@@ -453,6 +457,72 @@ layer2_12x12 = lambda nF: nn.Sequential(nn.ConvTranspose2d(1,nF, (1,2), stride=(
 
 ########################################
 
+# class inception(nn.Module):
+# 
+#     def __init__(self):
+# 
+#         self_conv_3x3   = nn.Conv2d(1,nF,(3,3),stride=(1,1),padding=(1,1))
+#         self_conv_5x5   = nn.Conv2d(1,nF,(3,3),stride=(1,1),padding=(1,1))
+#         self_conv_1x1_1 = nn.Conv2d(1,nF,(3,3),stride=(1,1),padding=(1,1))
+#         self_conv_1x1_2 = nn.Conv2d(1,nF,(3,3),stride=(1,1),padding=(1,1))
+#         self_conv_1x1_3 = nn.Conv2d(1,nF,(3,3),stride=(1,1),padding=(1,1))
+#         self_conv_1x1_4 = nn.Conv2d(1,nF,(3,3),stride=(1,1),padding=(1,1))
+# 
+#     def forward(self, x):
+# 
+#         cnn_1x1_1 =  self.conv_1x1_1(x) 
+#         cnn_1x1_2 =  self.conv_1x1_2(x)
+#         pool_3x3  =  nn.MaxPool2d((3,3),stride=1, padding=1) 
+# 
+#         cnn_1x1_3 = self.conv_1x1_3(x)
+#         cnn_3x3   = self.conv_3x3(x)
+#         cnn_5x5   = self.conv_3x3(x)
+#         cnn_1x1_4 = self.conv_1x1_4(pool_3x3)
+#  
+#         out = torch.cat((cnn_1x1_3, cnn_3x3, cnn_5x5, cnn_1x1_4),dim=?)
+
+
+'''
+These sequential models downsample the img to 3x6 
+'''
+layer0_3x6 = lambda nF: nn.Sequential(nn.Conv2d(1,nF,(3,3),stride=(1,1),padding=(1,1)),
+                                      nn.BatchNorm2d(nF),
+                                      nn.ReLU(),
+                                      nn.MaxPool2d((1,2)),
+                                      nn.Conv2d(nF,nF,(3,3),stride=(1,1),padding=(1,1)),
+                                      nn.BatchNorm2d(nF),
+                                      nn.ReLU(),
+                                      nn.MaxPool2d((1,2)),
+                                      nn.Conv2d(nF,nF,(3,3),stride=(1,1),padding=(1,1)),
+                                      nn.BatchNorm2d(nF),
+                                      nn.ReLU(),
+                                      nn.MaxPool2d((1,2)),
+                                      nn.Conv2d(nF,nF,(3,3),stride=(1,1),padding=(1,1)),
+                                      nn.BatchNorm2d(nF),
+                                      nn.ReLU(),
+                                      nn.MaxPool2d((1,2))
+                                     )
+
+layer1_3x6 = lambda nF: nn.Sequential(nn.Conv2d(1,nF,(3,3),padding=(1,1)),
+                                      nn.BatchNorm2d(nF),
+                                      nn.ReLU(),
+                                      nn.MaxPool2d((2,2)),
+                                      nn.Conv2d(nF,nF,(3,3),padding=(1,1)),
+                                      nn.BatchNorm2d(nF),
+                                      nn.ReLU(),
+                                      nn.MaxPool2d((2,1)),
+                                     )
+
+layer2_3x6 = lambda nF: nn.Sequential(nn.Conv2d(1,nF,(3,3),stride=(1,1),padding=(1,1)),
+                                      nn.BatchNorm2d(nF),
+                                      nn.ReLU(),
+                                      nn.MaxPool2d((2,1)),
+                                      nn.Conv2d(nF,nF,(3,3),padding=(1,1)),
+                                      nn.BatchNorm2d(nF),
+                                      nn.ReLU(),
+                                      nn.MaxPool2d((2,1)),
+                                     )
+
 class CNN_3d(nn.Module):
 
     '''
@@ -466,29 +536,50 @@ class CNN_3d(nn.Module):
 
 
     '''
-    def __init__(self, nF1=4, nF2=8, 
+    def __init__(self, spatialDim=12, preConvParams={'nF1':4, 'nF2':8}, 
                  nFilters_1 = 16, filter_1=(3,4,4), stride_1=(2,2,2), padding_1=(1,1,1),
                  nFilters_2 = 8,  filter_2=(2,2,2), stride_2=(1,2,2), padding_2=(0,1,1),
                  h1_dim=50, h2_dim=25, p=0.5):
 
        super().__init__()
 
-       self.layer0_12x12 = layer0_12x12(nF1,nF2)
-       self.layer1_12x12 = layer1_12x12(nF2)
-       self.layer2_12x12 = layer2_12x12(nF2)
-       self.nF1 = nF1
-       self.nF2 = nF2
+
+       if isinstance(spatialDim, int) and spatialDim == 12:
+
+           nF1 = preConvParams['nF1']
+           nF2 = preConvParams['nF2']
+
+           self.layer0_preConv = layer0_12x12(nF1,nF2)
+           self.layer1_preConv = layer1_12x12(nF2)
+           self.layer2_preConv = layer2_12x12(nF2)
+
+           self.img_phi = 12 
+           self.img_eta = 12 
+
+           self.nF = nF2
+
+       elif isinstance(spatialDim, tuple) and spatialDim[0] == 3 and spatialDim[1] == 6:
+
+           nF = preConvParams['nF']
+
+           self.layer0_preConv = layer0_3x6(nF) 
+           self.layer1_preConv = layer1_3x6(nF) 
+           self.layer2_preConv = layer2_3x6(nF) 
+
+           self.img_phi = 3 
+           self.img_eta = 6 
+
+           self.nF = nF
 
        nOut = 3
-       spatialDim = 12
-
-       self.cnn3d_1 = nn.Conv3d(nF2, nFilters_1, filter_1, stride_1, padding_1)
+       
+       self.cnn3d_1 = nn.Conv3d(self.nF, nFilters_1, filter_1, stride_1, padding_1)
        self.bn3d_1 = nn.BatchNorm3d(nFilters_1)
 
        # Calculate the number of input dimensions seen by each of the inputs
        d1_out = (3 - filter_1[0] + 2*padding_1[0]) / stride_1[0] + 1 
-       h1_out = (spatialDim - filter_1[1] + 2*padding_1[1]) / stride_1[1] + 1
-       w1_out = (spatialDim - filter_1[2] + 2*padding_1[2]) / stride_1[2] + 1
+       h1_out = (self.img_phi - filter_1[1] + 2*padding_1[1]) / stride_1[1] + 1
+       w1_out = (self.img_eta - filter_1[2] + 2*padding_1[2]) / stride_1[2] + 1
 
        print("Output size after the first conv: {},{},{},{}".format(nFilters_1, d1_out, h1_out, w1_out))
 
@@ -501,7 +592,7 @@ class CNN_3d(nn.Module):
        print("Output size after the second conv: {},{},{},{}".format(nFilters_2, d2_out, h2_out, w2_out))
 
        # After the 3d convolutions, flatten and classify the output
-       fc_inpt = nFilters_2 * d2_out * h2_out**2 
+       fc_inpt = nFilters_2 * d2_out * h2_out * w2_out 
 
        self.fc1 = nn.Linear(fc_inpt, h1_dim) 
        self.fc2 = nn.Linear(h1_dim, h2_dim) 
@@ -514,17 +605,17 @@ class CNN_3d(nn.Module):
  
        self.dropout = p
 
-       self.modelName = "cnn3d_12x12_C{}_F{}{}{}_S{}{}{}_P{}{}{}_C{}_F{}{}{}_S{}{}{}_P{}{}{}_fc_{}_{}_dpt_{}".format(nFilters_1,*filter_1,*stride_1,*padding_1,\
-                        nFilters_2,*filter_2,*stride_2,*padding_2,h1_dim,h2_dim,p)
+       self.modelName = "cnn3d_{}x{}_C{}_F{}{}{}_S{}{}{}_P{}{}{}_C{}_F{}{}{}_S{}{}{}_P{}{}{}_fc_{}_{}_dpt_{}".format(self.img_phi,self.img_eta,\
+                        nFilters_1,*filter_1,*stride_1,*padding_1,nFilters_2,*filter_2,*stride_2,*padding_2,h1_dim,h2_dim,p)
 
     def forward(self, layer0, layer1, layer2):
 
         # Call the functions above to make the input dim of the three layers the same 
-        l0 = self.layer0_12x12(layer0).view(-1,self.nF2,1,12,12)
         #l1 = layer1.view(-1,1,1,12,12)
-        #l1 = torch.cat(tuple([layer1.view(-1,1,1,12,12)]*self.nF2),dim=1)
-        l1 = self.layer1_12x12(layer1).view(-1,self.nF2,1,12,12)
-        l2 = self.layer2_12x12(layer2).view(-1,self.nF2,1,12,12)
+        #l1 = torch.cat(tuple([layer1.view(-1,1,1,12,12)] * 12),dim=1)
+        l0 = self.layer0_preConv(layer0).view(-1, self.nF, 1, self.img_phi, self.img_eta)
+        l1 = self.layer1_preConv(layer1).view(-1, self.nF, 1, self.img_phi, self.img_eta)
+        l2 = self.layer2_preConv(layer2).view(-1, self.nF, 1, self.img_phi, self.img_eta)
 
         # Concatenate the inputs
         # Pytorch's 3d conv expects an input with shape (N, C_{in}, D, H, W)
