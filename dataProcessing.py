@@ -27,8 +27,8 @@ class emShowersDatasetFlat(Dataset):
             0 (gamma), 1 (pi-plus), 2 (positron)
         
         Args:
-            relPath: The relative path to where the hdf5 files live
             N: The number of images we have for each particle class
+            relPath: The relative path to where the hdf5 files live
         
         Caveat: I just manually subtracted the mean images from the training
         set and did the tensor transforms, but actually, this would be done
@@ -86,18 +86,17 @@ class emShowersDatasetFlat(Dataset):
         
         return self.layer0[idx], self.layer1[idx], self.layer2[idx], self.y[idx]
 
-def getDataLoaders(batch_size=64, N=-1):
+def getDataLoaders(batch_size=64, N=100000):
     '''
 
-    Input: batch_size
-
+    Input: 
+        batch_size
+        N: Number of events / particle, 100k uses all the available data
+ 
     Returns: loader_train, loader_val, loader_test
-       DataLoaders for the train, val, and test sets
+        DataLoaders for the train, val, and test sets
  
     '''
-
-    if N != -1:
-        N = 100000 # 100k events / particle
 
     nClasses = 3
     dset = emShowersDatasetFlat(N=N)
