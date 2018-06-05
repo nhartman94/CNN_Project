@@ -4,6 +4,7 @@ the PyTorch nb in assignment 2 :-)
 '''
 import torch
 import torch.nn.functional as F
+import copy
 
 # Some useful global variables to use across functions
 if torch.cuda.is_available():
@@ -133,13 +134,14 @@ def train(loader_train, loader_val, model, optimizer, epochs=1, returnBest=False
         # Check if this model has the best validation accuracy 
         if hist['val_acc'][-1] > bestValAcc:
             bestValAcc = hist['val_acc'][-1] 
-            bestModel = model
+            bestModel = copy.deepcopy(model)
 
     # Save the weights for the best model
     if model.modelName is not None:
         # https://pytorch.org/docs/master/notes/serialization.html
         # https://github.com/pytorch/examples/blob/master/imagenet/main.py#L139
-        torch.save(bestModel.state_dict(), "../models/{}.pth.tar".format(model.modelName))
+        torch.save(bestModel.state_dict(), "../models/{}.pt".format(model.modelName))
+        torch.save(bestModel.state_dict(), "models/{}.pt".format(model.modelName))
 
     if returnBest:
         return hist, bestModel
