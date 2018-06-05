@@ -13,7 +13,7 @@ else:
     device = torch.device('cpu')
 dtype = torch.float32
 
-def check_accuracy(loader, model, returnAcc=False):
+def check_accuracy(loader, model, returnAcc=False, verbose=False):
 
     '''
     Check the accuracy of the model
@@ -28,8 +28,9 @@ def check_accuracy(loader, model, returnAcc=False):
     num_correct = 0
     num_samples = 0
     model.eval()  # set model to evaluation mode
-
-    print(device)
+        
+    if verbose: 
+        print(device)
     model = model.to(device=device)
 
     with torch.no_grad():
@@ -44,7 +45,8 @@ def check_accuracy(loader, model, returnAcc=False):
             num_correct += (preds == y).sum()
             num_samples += preds.size(0)
         acc = float(num_correct) / num_samples
-        print('Got %d / %d correct (%.2f)' % (num_correct, num_samples, 100 * acc))
+        if verbose: 
+            print('Got %d / %d correct (%.2f)' % (num_correct, num_samples, 100 * acc))
 
         if returnAcc:
             return acc
@@ -65,7 +67,7 @@ def check_loss(loader, model):
             loss = F.cross_entropy(scores, y) 
 
 
-def train(loader_train, loader_val, model, optimizer, epochs=1, returnBest=False):
+def train(loader_train, loader_val, model, optimizer, epochs=1, returnBest=False, verbose=False):
     """
     Train a model on CIFAR-10 using the PyTorch Module API.
     
@@ -96,8 +98,8 @@ def train(loader_train, loader_val, model, optimizer, epochs=1, returnBest=False
     bestValAcc = 0
 
     for e in range(epochs):
-
-        print("\nEpoch {}/{}:".format(e+1,epochs))
+        if verbose: 
+            print("\nEpoch {}/{}:".format(e+1,epochs))
 
         for t, (l0, l1, l2, y) in enumerate(loader_train):
             model.train()  # put model to training mode
@@ -121,11 +123,12 @@ def train(loader_train, loader_val, model, optimizer, epochs=1, returnBest=False
             # Actually update the parameters of the model using the gradients
             # computed by the backwards pass.
             optimizer.step()
-
-            if t % print_every == 0:
-                print('Iteration %d, loss = %.4f' % (t, loss.item()))
-                check_accuracy(loader_val, model)
-                print()
+            
+            if verbose: 
+                if t % print_every == 0:
+                    print('Iteration %d, loss = %.4f' % (t, loss.item()))
+                    check_accuracy(loader_val, model)
+                    print()
 
         # Save the acc / epoch
         hist['acc'] .append(check_accuracy(loader_train, model, returnAcc=True)) 
