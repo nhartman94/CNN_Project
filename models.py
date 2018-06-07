@@ -528,12 +528,6 @@ class CNN_3d(nn.Module):
     '''
     This first transforms the model input layers into a 12x12 dim images, and then
     applies a 3d convolution to the inputs  
-    '''
-
-    '''
-   
-    Inputs:
-
 
     '''
     def __init__(self, spatialDim=12, preConvParams={'nF1':4, 'nF2':8}, 
@@ -597,11 +591,9 @@ class CNN_3d(nn.Module):
        self.fc1 = nn.Linear(fc_inpt, h1_dim) 
        self.fc2 = nn.Linear(h1_dim, h2_dim) 
        self.fc3 = nn.Linear(h2_dim, nOut) #h3_dim) 
-       #self.fc4 = nn.Linear(h3_dim, nOut) 
 
        self.bn1 = nn.BatchNorm1d(h1_dim)
        self.bn2 = nn.BatchNorm1d(h2_dim)
-       #self.bn3 = nn.BatchNorm1d(h3_dim)
  
        self.dropout = p
 
@@ -611,8 +603,6 @@ class CNN_3d(nn.Module):
     def forward(self, layer0, layer1, layer2):
 
         # Call the functions above to make the input dim of the three layers the same 
-        #l1 = layer1.view(-1,1,1,12,12)
-        #l1 = torch.cat(tuple([layer1.view(-1,1,1,12,12)] * 12),dim=1)
         l0 = self.layer0_preConv(layer0).view(-1, self.nF, 1, self.img_phi, self.img_eta)
         l1 = self.layer1_preConv(layer1).view(-1, self.nF, 1, self.img_phi, self.img_eta)
         l2 = self.layer2_preConv(layer2).view(-1, self.nF, 1, self.img_phi, self.img_eta)
@@ -642,117 +632,12 @@ class CNN_3d(nn.Module):
         y = self.fc2(y)
         y = self.bn2(y)
         y = nn.ReLU()(y)
-        #y = nn.Dropout(self.dropout)(y)
-
-        # Third fc layer
-        #y = self.fc3(y)
-        #y = self.bn3(y)
-        #y = nn.ReLU()(y)
 
         # Output scores
         scores = self.fc3(y)            
 
         return scores 
-
-
-# class CNN2d_LSTM(nn.Module):
-# 
-#     '''
-#     This first transforms the model input layers into a 12x12 dim images, and then
-#     applies a 2d convolution to the inputs, and lastly feeds them as inputs to an LSTM 
-#     '''
-# 
-#    def __init__(self, nFilters_1 = 16, filter_1=2, stride_1=2, padding_1=1,
-#                       nFilters_2 = 8,  filter_2=3, stride_2=2, padding_2=1,
-#                       nLSTM=25, fc_dim=25):
-#        '''
-#       
-#        Inputs:
-# 
-#  
-#        '''
-# 
-#        super().__init__()
-# 
-#        self.layer0_12x12 = layer0_12x12
-#        self.layer2_12x12 = layer2_12x12
-# 
-#        nOut = 3
-#        spatialDim = 12
-# 
-#        self.cnn2d_1 = nn.Conv2d(1, nFilters_1, filter_1, stride_1, padding_1)
-#        self.bn2d_1 = nn.BatchNorm2d(nFilters_1)
-# 
-#        # Calculate the number of input dimensions seen by each of the inputs
-#        h1_out = (spatialDim - filter_1[1] + 2*padding_1[1]) / stride_1[1] + 1
-#        w1_out = (spatialDim - filter_1[2] + 2*padding_1[2]) / stride_1[2] + 1
-# 
-#        print("Output size after the first conv: {},{},{}".format(nFilters_1, h1_out, w1_out))
-# 
-#        self.cnn2d_2 = nn.Conv2d(nFilters_1, nFilters_2, filter_2, stride_2, padding_2)
-#        self.bn2d_2 = nn.BatchNorm2d(nFilters_2)
-# 
-#        h2_out = (h1_out - filter_2[1] + 2*padding_2[1]) / stride_2[1] + 1
-#        w2_out = (w1_out - filter_2[2] + 2*padding_2[2]) / stride_2[2] + 1
-#        print("Output size after the second conv: {},{},{}".format(nFilters_2, h2_out, w2_out))
-# 
-#        # After the 3d convolutions, flatten and classify the output
-#        fc_inpt = nFilters_2 * h2_out * w2_out 
-# 
-#        # After the 3d convolutions, flatten and classify the output
-#        fc_inpt = nFilters_2 * d2_out * h2_out**2 
-# 
-#        self.fc1 = nn.Linear(fc_inpt, h1_dim) 
-#        self.fc2 = nn.Linear(h1_dim, h2_dim) 
-#        self.fc3 = nn.Linear(h2_dim, nOut) 
-# 
-#        self.bn1 = nn.BatchNorm1d(h1_dim)
-#        self.bn2 = nn.BatchNorm1d(h2_dim)
-#  
-#        self.dropout = p
-# 
-#        self.modelName = "cnn3d_12x12_C{}_F{}{}{}_S{}{}{}_P{}{}{}_C{}_F{}{}{}_S{}{}{}_P{}{}{}_fc_{}_{}_dpt_{}".format(nFilters_1,*filter_1,*stride_1,*padding_1,\
-#                         nFilters_2,*filter_2,*stride_2,*padding_2,h1_dim,h2_dim,p)
-# 
-#     def forward(self, layer0, layer1, layer2):
-# 
-#         # Call the functions above to make the input dim of the three layers the same 
-#         l0 = self.layer0_12x12(layer0).view(-1,1,1,12,12)
-#         l1 = layer1.view(-1,1,1,12,12)
-#         l2 = layer2_12x12(layer2).view(-1,1,1,12,12)
-# 
-#         # Concatenate the inputs
-#         # Pytorch's 3d conv expects an input with shape (N, C_{in}, D, H, W)
-#         x = torch.cat((l0, l1, l2),dim=2)
-# 
-#         # First 3d conv layer
-#         cnn3d_1 = self.cnn3d_1(x)
-#         bn3d_1 = self.bn3d_1(cnn3d_1)
-# 
-#         # Second 3d conv layer
-#         cnn3d_2 = self.cnn3d_2(bn3d_1)
-#         bn3d_2 = self.bn3d_2(cnn3d_2)
-# 
-#         # Flatten the input
-#         y = flatten(bn3d_2)
-# 
-#         # First fc layer
-#         y = self.fc1(y)
-#         y = self.bn1(y)
-#         y = nn.ReLU()(y)
-#         y = nn.Dropout(self.dropout)(y)
-# 
-#         # Second fc layer
-#         y = self.fc2(y)
-#         y = self.bn2(y)
-#         y = nn.ReLU()(y)
-# 
-#         # Output scores
-#         scores = self.fc3(y)            
-# 
-#         return scores 
-# 
-
+ 
 
 
 class rnn_2dCNN(nn.Module):
