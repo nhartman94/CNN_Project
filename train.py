@@ -13,7 +13,7 @@ else:
     device = torch.device('cpu')
 dtype = torch.float32
 
-def check_accuracy(loader, model, returnAcc=False, verbose=False):
+def check_accuracy(loader, model, returnAcc=False, verbose=True):
 
     '''
     Check the accuracy of the model
@@ -67,7 +67,7 @@ def check_loss(loader, model):
             loss = F.cross_entropy(scores, y) 
 
 
-def train(loader_train, loader_val, model, optimizer, epochs=1, returnBest=False, verbose=False):
+def train(loader_train, loader_val, model, optimizer, scheduler=None, epochs=1, returnBest=False, verbose=True):
     """
     Train a model on CIFAR-10 using the PyTorch Module API.
     
@@ -87,6 +87,7 @@ def train(loader_train, loader_val, model, optimizer, epochs=1, returnBest=False
     print_every=100
 
     model = model.to(device=device)  # move the model parameters to CPU/GPU
+    print(device) 
 
     hist = {}
     hist['loss'] = []
@@ -129,22 +130,30 @@ def train(loader_train, loader_val, model, optimizer, epochs=1, returnBest=False
                     print('Iteration %d, loss = %.4f' % (t, loss.item()))
                     check_accuracy(loader_val, model)
                     print()
+                    
+        val_acc = check_accuracy(loader_val, model, returnAcc=True) 
+        # learning rate scheduler 
+        if scheduler is not None: 
+            scheduler.step(loss) 
 
         # Save the acc / epoch
         hist['acc'] .append(check_accuracy(loader_train, model, returnAcc=True)) 
-        hist['val_acc'] .append(check_accuracy(loader_val, model, returnAcc=True)) 
+        hist['val_acc'] .append(val_acc) 
 
         # Check if this model has the best validation accuracy 
         if hist['val_acc'][-1] > bestValAcc:
             bestValAcc = hist['val_acc'][-1] 
             bestModel = copy.deepcopy(model)
-
+            
+    """
+    NOTE: un-comment this block if you want to save the best model in the training function, instead of in the 
+    iPython notebook. 
+    """
     # Save the weights for the best model
-    if model.modelName is not None:
+    #if model.modelName is not None:
         # https://pytorch.org/docs/master/notes/serialization.html
         # https://github.com/pytorch/examples/blob/master/imagenet/main.py#L139
-        torch.save(bestModel.state_dict(), "../models/{}.pt".format(model.modelName))
-        torch.save(bestModel.state_dict(), "models/{}.pt".format(model.modelName))
+        #torch.save(bestModel.state_dict(), "../models/{}.pt".format(model.modelName))
 
     if returnBest:
         return hist, bestModel
