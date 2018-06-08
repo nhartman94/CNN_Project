@@ -4,8 +4,29 @@
 
 This repository contains code for constructing various neural networks to classify particles from the Micky et. al. dataset based on energy deposition. The map below provides a brief explanation of each file, and a summary of the notebooks that were important to our project's development. An in-depth discussion of the network architectures can be found in the paper "Classifying Electromagnetic Showers from Calorimeter Image swith CNNs", by Nicole Hartman and Sean Mullane. 
 
-Repository Map: 
-// put map here once cleaned up 
+## Repository Map 
+
+Main Branch:
+    
+    -dataProcessing.py --> code to organize dataset into layers for use during training/testing 
+    -imageNumber_analysis.py --> functions to test how the total number of training images affects the validation accuracy 
+    -learn_rate_optimize.py --> code to optimize the learning rate for a given model 
+    -models.py --> central file for all models used in the project 
+    -plottingFcts.py --> central file for all plotting functions used in the project 
+    -train.py --> training code, largely taken from CS231N homeworks 
+    
+models folder: contains stored models from various training notebooks 
+
+figures folder: contains saved figures from the model visualization notebooks 
+
+Notebooks folder: central folder for all iPython notebooks used in the project. Includes: 
+
+    -Data-Processsing.ipynb --> initial notebook to test data processing functions
+    -Ensembling.ipynb --> an attempt at ensembling/average models to asses overall performance 
+    -Final_Models_testSet.ipynb --> notebook that ran the test set on the final 2d RCNN models 
+    -Final_Test_Vis.ipynb --> notebook that ran visualization functions on the final 2d RCNN models
+    -Visualizations.ipynb --> notebook that ran visualization functions on the final 3d CNN models 
+
 
 Authors: 
     Nicole Hartman and Sean Mullane, Stanford University Department of Physics
