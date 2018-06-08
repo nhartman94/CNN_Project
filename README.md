@@ -36,6 +36,7 @@ Initial_Notebooks: contains notebooks that were used at the beginning of our pro
 Recurrent_CNN_Models: contains notebooks that were used to construct and tune the 2d RCNN models
 
 
+# Contributors 
 Authors: 
     Nicole Hartman and Sean Mullane, Stanford University Department of Physics
 
