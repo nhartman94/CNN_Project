@@ -1,8 +1,8 @@
 # Classifying Electromagnetic Showers from Calorimeter Images with CNNs
 
-## Algorithms
+## Overview 
 
-This repository contains code for constructing various neural networks to classify particles from the Micky et. al. dataset based on energy deposition. The map below provides a brief explanation of each file, and a summary of the notebooks that were important to our project's development. An in-depth discussion of the network architectures can be found in the paper "Classifying Electromagnetic Showers from Calorimeter Image swith CNNs", by Nicole Hartman and Sean Mullane. 
+This repository contains code for constructing various neural networks to classify particles from the Micky et. al. dataset based on energy deposition. The map below provides a brief explanation of each file, and a summary of the notebooks that were important to our project's development. An in-depth discussion of the network architectures can be found in the paper "Classifying Electromagnetic Showers from Calorimeter Images with CNNs", by Nicole Hartman and Sean Mullane. 
 
 ## Repository Map 
 
@@ -26,6 +26,14 @@ Notebooks folder: central folder for all iPython notebooks used in the project. 
     -Final_Models_testSet.ipynb --> notebook that ran the test set on the final 2d RCNN models 
     -Final_Test_Vis.ipynb --> notebook that ran visualization functions on the final 2d RCNN models
     -Visualizations.ipynb --> notebook that ran visualization functions on the final 3d CNN models 
+    
+3d_models folder: contains notebooks that were used to construct and tune the 3d CNN models 
+
+Baseline_CNN_models: contains notebooks that were used to construct and tune the baseline CNN models 
+ 
+Initial_Notebooks: contains notebooks that were used at the beginning of our project to explore the dataset and construct the first fully connected networks 
+
+Recurrent_CNN_Models: contains notebooks that were used to construct and tune the 2d RCNN models
 
 
 Authors: 
