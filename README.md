@@ -43,6 +43,10 @@ Authors:
 Most esteemed mentor: 
     Michael Kagan, SLAC/CERN-ATLAS 
     
+## Starter Code 
+
+Our starter code was only taken from CS231N assignments. This included the check_accuracy, check_loss, and train functions in train.py (the function train_ThreeCNN, while structured on train, was not explicitly taken from the class).
+    
 ## Dataset
 
 We will be using the jet images of the showers in the EM calorimeter produced
